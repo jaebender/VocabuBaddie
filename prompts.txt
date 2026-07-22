@@ -119,3 +119,65 @@ Assume:
 * If the database does not yet exist, the application should create it automatically.
 
 Keep the specification conservative and appropriate for a first loop-engineering project. Do not write code or implementation details yet.
+
+=== Step 5: Extension - Plan ===
+
+Help me create the **Extension / Plan** for my Streamlit word game, based on `docs/extension-spec.md` and the base system that is already complete.
+
+The extension adds persistent high scores with SQLite and a simple leaderboard.
+
+Please produce a conservative implementation plan that fits a first loop-engineering project and stays as small as possible.
+
+I want the plan to include:
+
+1. The smallest sensible file/folder structure for the extension.
+2. The main modules or files I should add or change.
+3. The SQLite table schema or schemas needed for storing scores.
+4. How the Streamlit app should save a score at the end of a game.
+5. How the leaderboard should be read and displayed.
+6. Any Streamlit session state changes needed for the extension.
+7. The order I should build the extension pieces in.
+8. A short testing checklist for the extension.
+9. Any risks or tricky parts I should watch for.
+10. Anything that should stay out of scope for the extension.
+
+Assume:
+
+* The base game already works.
+* The app uses Streamlit.
+* The leaderboard should show the top 10 scores.
+* The database should be created automatically if it does not already exist.
+
+Keep the plan practical, simple, and easy to turn into code. Do not write the code yet.
+
+Prompt - Loop:
+Review the implementation plan you just produced.
+
+My priorities are:
+
+* Keep the project as small as possible while still satisfying the assignment.
+* Reuse as much of the existing Streamlit application as possible.
+* Minimize the number of new files and functions.
+* Use only standard Python libraries plus Streamlit and SQLite.
+
+Please identify:
+
+1. Any unnecessary complexity.
+2. Any missing implementation steps.
+3. Any potential issues with the SQLite design.
+4. Any recommendations to simplify the implementation without sacrificing functionality.
+
+Do not rewrite the entire plan yet. Only provide the review and recommendations.
+
+Prompt - Loops:
+Rewrite the implementation plan incorporating the recommendations from your review.
+
+Please produce a revised implementation plan that:
+
+* Keeps the architecture as simple as possible.
+* Uses the fewest practical files.
+* Integrates naturally with the existing Streamlit application.
+* Stores scores in a single SQLite database.
+* Displays the top 10 scores after the game ends.
+
+This revised plan will become the implementation plan for the extension, so make it concise, practical, and ready to guide development. Do not include code.
