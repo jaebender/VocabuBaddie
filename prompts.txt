@@ -93,3 +93,29 @@ The vocabulary data is actually stored as a **JSON file**, not a Python file. Pl
 Before changing any code, explain what you think is causing the path or filename mismatch. Then modify the code to load the JSON file in a robust way using `pathlib.Path`, so it works regardless of the current working directory when the Streamlit app is launched.
 
 Only change the code related to loading the vocabulary data. Leave the rest of the application unchanged.
+
+=== Step 4: Extension - Specify ===
+
+Help me write a clear specification for the **Extension** of my Streamlit word game. The base system is already complete and includes a playable multiple-choice vocabulary game with score tracking during a game.
+
+The purpose of this extension is to add persistent high scores using a backend database.
+
+Please produce:
+
+1. A short goal for the extension.
+2. The minimum feature list for the extension.
+3. The user flow from the end of a game through saving a score and viewing the leaderboard.
+4. The data that should be stored for each score.
+5. Any validation or error handling that should be included.
+6. The main edge cases to consider.
+7. A clear list of what is out of scope for this extension.
+
+Assume:
+
+* The application is built with Streamlit.
+* SQLite will be used for persistence.
+* The leaderboard should display the top 10 scores.
+* The player should be able to enter a username after the game ends.
+* If the database does not yet exist, the application should create it automatically.
+
+Keep the specification conservative and appropriate for a first loop-engineering project. Do not write code or implementation details yet.
