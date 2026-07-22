@@ -56,3 +56,40 @@ Rewrite the implementation plan incorporating your recommendations. Keep the arc
 
 Output:
 docs/base-system-plan.md
+
+=== Step 3 - Build ===
+
+Prompt:
+Help me build the **base system** for my Streamlit word game, using `docs/base-system-spec.md` as the source of truth and reusing the vocabulary data in `vocab_lists/english_vocab_list_tester.py`.
+
+Please create the smallest possible working first version of the app. Keep it conservative and easy to understand. I want you to focus on the core playable game only, not the leaderboard or database yet.
+
+For this first build, please:
+
+1. Propose a minimal file structure if needed.
+2. Create a basic Streamlit app that can load the existing vocab list.
+3. Show one word at a time with four multiple-choice definition options.
+4. Make sure one option is correct and the other three are plausible distractors.
+5. Track whether the player answered correctly.
+6. Keep basic score state in Streamlit session state.
+7. Include a simple way to restart or move to the next question.
+8. Do not add any database, backend persistence, or leaderboard features yet.
+
+Please write code that is straightforward and small. If you think the build should be split into smaller pieces, start with the first piece that gets the app scaffold and core game flow in place, and explain what you are leaving for the next prompt.
+
+Prompt:
+The application launches, but the vocabulary data cannot be loaded.
+
+Current error:
+
+```
+Vocabulary data could not be loaded:
+[Errno 2] No such file or directory:
+'C:\Users\benderj\VocabuBaddie\VocabuBaddie\vocab_lists\english_vocab_list_tester.py'
+```
+
+The vocabulary data is actually stored as a **JSON file**, not a Python file. Please update the implementation so it correctly loads the JSON dataset from the project.
+
+Before changing any code, explain what you think is causing the path or filename mismatch. Then modify the code to load the JSON file in a robust way using `pathlib.Path`, so it works regardless of the current working directory when the Streamlit app is launched.
+
+Only change the code related to loading the vocabulary data. Leave the rest of the application unchanged.
