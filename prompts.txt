@@ -1,0 +1,17 @@
+=== Step 1 - Specify ===
+
+Prompt:
+I am starting a loop-engineering homework project. Help me write a clear, conservative specification for the base system of a small Streamlit word game.
+Project idea: the app shows a low-frequency English word and four multiple-choice definition options. The player picks the correct definition. Time affects score. I will later add a backend leaderboard as an extension, so for this base system, focus only on the core playable game and do not include the leaderboard yet.
+Please produce:
+A short project goal.
+The minimum feature list for the base system.
+A simple gameplay flow from start to finish.
+The data the app needs from a word-definition JSON file.
+The main edge cases to watch for.
+A very small non-ambitious scope that is realistic for a first loop-engineering exercise.
+A clear list of what is explicitly out of scope for this first step.
+Keep the answer practical, concrete, and easy for me to turn into implementation tasks. Use plain language and do not overcomplicate the design.
+
+Output:
+docs/base-system-spec.md
