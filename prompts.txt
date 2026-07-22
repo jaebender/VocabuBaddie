@@ -15,3 +15,44 @@ Keep the answer practical, concrete, and easy for me to turn into implementation
 
 Output:
 docs/base-system-spec.md
+
+=== Step 2 - Plan ===
+Prompt: 
+Help me create the **Base System / Plan** for my Streamlit word game, based on the specification in `docs/base-system-spec.md` and the fact that I already have a vocab list in `vocab_lists/english_vocab_list_tester.py`.
+
+The existing data format is already suitable and looks like this:
+
+```python
+{
+  "word": "not",
+  "frequency": 17,
+  "defs": [
+    "negation of a word or group of words"
+  ]
+}
+```
+
+Please turn the spec into a conservative implementation plan that assumes I will use that existing Python vocab file as the source of word data for the base system.
+
+I want the plan to include:
+
+1. The smallest sensible file/folder structure.
+2. The main modules or files I should create.
+3. How to load and use the existing `vocab_lists/english_vocab_list_tester.py` data.
+4. The key data flow through the app.
+5. The Streamlit session state variables I will likely need.
+6. The order I should build the pieces in.
+7. A short testing checklist for the base system.
+8. Any risks or tricky parts I should watch for.
+9. Anything that should stay out of scope for the base system.
+
+Keep the plan small, practical, and easy to turn into code. Do not write the code yet. Do not add leaderboard or database work yet. Focus only on the base playable game and on reusing the existing vocab file cleanly.
+
+Prompt - Loop:
+Review the implementation plan you just produced. My priorities are simplicity, Streamlit, and completing this as a first loop engineering project. Identify anything unnecessarily complex, anything missing, and any recommendations to reduce implementation effort while still satisfying the specification.
+
+Prompt - Loop:
+Rewrite the implementation plan incorporating your recommendations. Keep the architecture as small as possible. Assume the existing vocabulary data in vocab_lists/english_vocab_list_tester.py will be used directly for the base system.
+
+Output:
+docs/base-system-plan.md
