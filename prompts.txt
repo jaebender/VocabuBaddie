@@ -181,3 +181,30 @@ Please produce a revised implementation plan that:
 * Displays the top 10 scores after the game ends.
 
 This revised plan will become the implementation plan for the extension, so make it concise, practical, and ready to guide development. Do not include code.
+
+=== Step 6: Extension - Build ===
+
+Help me build the **extension** of my Streamlit word game, using `docs/extension-plan.md` as the source of truth and reusing the base system that already works.
+
+The extension should add persistent high scores with SQLite and a simple top-10 leaderboard.
+
+Please create the smallest practical implementation for this extension. Keep it conservative and easy to understand.
+
+For this first build prompt, please:
+
+1. Reuse the existing Streamlit app as much as possible.
+2. Add only the files or functions needed for SQLite score storage.
+3. Create or update the database automatically if it does not exist.
+4. Save a player's score when a game ends and the player enters a username.
+5. Display the top 10 scores in a simple leaderboard view.
+6. Keep validation and error handling basic but reliable.
+7. Do not add user accounts, authentication, networking, or any extra features beyond the leaderboard.
+8. If the extension should be split into smaller pieces, build the database and save-score path first, and explain what should wait for the next prompt.
+
+Please write code that is straightforward and minimal, and assume the base game is already complete.
+
+Prompt:
+Please write the changes to a new temp file and I'll paste and review the diff.
+
+Prompt:
+Actually, please just take the original app.py and apply the Extension - Build code changes in a new file, called app2.py/

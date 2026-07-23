@@ -1,11 +1,12 @@
-"""A small Streamlit vocabulary quiz using the local vocabulary list."""
+"""Streamlit vocabulary game with a local SQLite top-10 leaderboard."""
 
 from __future__ import annotations
 
-import importlib.util
-import random
-import time
 import json
+import random
+import sqlite3
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import streamlit as st
@@ -13,49 +14,96 @@ import streamlit as st
 
 TOTAL_QUESTIONS = 5
 FAST_ANSWER_SECONDS = 10
+DATABASE_PATH = Path(__file__).resolve().parent / "scores.db"
 
 
 def load_vocabulary() -> list[dict[str, str]]:
-    """Load usable word/definition pairs from the local JSON data file."""
+    """Load usable word and first-definition pairs from the local JSON list."""
     vocab_directory = Path(__file__).resolve().parent / "vocab_lists"
     json_files = sorted(vocab_directory.glob("*.json"))
-
     if not json_files:
-        raise FileNotFoundError(
-            f"No JSON vocabulary file found in {vocab_directory}."
-        )
+        raise FileNotFoundError(f"No JSON vocabulary file found in {vocab_directory}.")
     if len(json_files) > 1:
-        raise ValueError(
-            f"Expected one JSON vocabulary file in {vocab_directory}."
-        )
+        raise ValueError(f"Expected one JSON vocabulary file in {vocab_directory}.")
 
     with json_files[0].open("r", encoding="utf-8") as data_file:
         raw_entries = json.load(data_file)
-
     if not isinstance(raw_entries, list):
         raise ValueError("The vocabulary JSON file must contain a list of entries.")
 
     entries = []
     for entry in raw_entries:
-        word = entry.get("word")
-        definitions = entry.get("defs")
-        if isinstance(word, str) and word.strip() and isinstance(definitions, list):
-            first_definition = definitions[0] if definitions else None
-            if isinstance(first_definition, str) and first_definition.strip():
-                entries.append(
-                    {"word": word.strip(), "definition": first_definition.strip()}
-                )
-
+        word = entry.get("word") if isinstance(entry, dict) else None
+        definitions = entry.get("defs") if isinstance(entry, dict) else None
+        first_definition = definitions[0] if isinstance(definitions, list) and definitions else None
+        if isinstance(word, str) and word.strip() and isinstance(first_definition, str) and first_definition.strip():
+            entries.append({"word": word.strip(), "definition": first_definition.strip()})
     return entries
 
 
+def initialize_database() -> None:
+    """Create the SQLite database table the first time it is needed."""
+    with sqlite3.connect(DATABASE_PATH) as connection:
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS scores (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                score INTEGER NOT NULL CHECK (score >= 0),
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+
+
+def save_score(username: str, score: int) -> None:
+    """Save one final score using a parameterized SQL query."""
+    initialize_database()
+    with sqlite3.connect(DATABASE_PATH) as connection:
+        connection.execute(
+            "INSERT INTO scores (username, score, created_at) VALUES (?, ?, ?)",
+            (username, score, datetime.now(timezone.utc).isoformat()),
+        )
+
+
+def get_top_scores() -> list[tuple[str, int, str]]:
+    """Read the ten highest scores, breaking ties by earliest save time."""
+    initialize_database()
+    with sqlite3.connect(DATABASE_PATH) as connection:
+        return connection.execute(
+            """
+            SELECT username, score, created_at
+            FROM scores
+            ORDER BY score DESC, created_at ASC
+            LIMIT 10
+            """
+        ).fetchall()
+
+
+def initialize_state() -> None:
+    defaults = {
+        "game_started": False,
+        "score": 0,
+        "question_number": 0,
+        "used_words": [],
+        "current_word": "",
+        "correct_definition": "",
+        "choices": [],
+        "question_start_time": 0.0,
+        "answered": False,
+        "last_feedback": None,
+        "score_saved": False,
+    }
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+
 def new_question(vocabulary: list[dict[str, str]]) -> None:
-    """Choose one unused word and make four unique definition choices."""
-    used_words = st.session_state.used_words
-    available = [entry for entry in vocabulary if entry["word"] not in used_words]
+    """Choose an unused word and make four distinct definition options."""
+    available = [entry for entry in vocabulary if entry["word"] not in st.session_state.used_words]
     correct_entry = random.choice(available)
     correct_definition = correct_entry["definition"]
-
     wrong_definitions = list(
         {
             entry["definition"]
@@ -80,36 +128,18 @@ def reset_game(vocabulary: list[dict[str, str]]) -> None:
     st.session_state.score = 0
     st.session_state.question_number = 0
     st.session_state.used_words = []
+    st.session_state.score_saved = False
     new_question(vocabulary)
-
-
-def initialize_state() -> None:
-    defaults = {
-        "game_started": False,
-        "score": 0,
-        "question_number": 0,
-        "used_words": [],
-        "current_word": "",
-        "correct_definition": "",
-        "choices": [],
-        "question_start_time": 0.0,
-        "answered": False,
-        "last_feedback": None,
-    }
-    for key, value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
 
 
 st.set_page_config(page_title="VocabuBaddie", page_icon="📚")
 st.title("VocabuBaddie")
 st.caption("Choose the correct definition. Answer quickly for more points.")
-
 initialize_state()
 
 try:
     vocabulary = load_vocabulary()
-except (OSError, RuntimeError, ValueError) as error:
+except (OSError, ValueError, json.JSONDecodeError) as error:
     st.error(f"Vocabulary data could not be loaded: {error}")
     st.stop()
 
@@ -127,6 +157,40 @@ if not st.session_state.game_started:
 
 if st.session_state.question_number >= TOTAL_QUESTIONS:
     st.success(f"Game complete! Your final score is {st.session_state.score} points.")
+
+    if not st.session_state.score_saved:
+        username = st.text_input("Username", max_chars=20)
+        if st.button("Save Score", type="primary"):
+            username = username.strip()
+            if not username:
+                st.error("Please enter a username to save your score.")
+            else:
+                try:
+                    save_score(username, st.session_state.score)
+                except sqlite3.Error as error:
+                    st.error(f"Could not save score: {error}")
+                else:
+                    st.session_state.score_saved = True
+                    st.rerun()
+    else:
+        st.success("Score saved.")
+
+    st.subheader("Top 10 Scores")
+    try:
+        scores = get_top_scores()
+    except sqlite3.Error as error:
+        st.error(f"Could not load leaderboard: {error}")
+    else:
+        if scores:
+            st.table(
+                [
+                    {"Rank": rank, "Username": name, "Score": score, "Saved": saved_at}
+                    for rank, (name, score, saved_at) in enumerate(scores, start=1)
+                ]
+            )
+        else:
+            st.info("No scores saved yet.")
+
     if st.button("Play Again", type="primary"):
         reset_game(vocabulary)
         st.rerun()
@@ -148,7 +212,6 @@ if not st.session_state.answered:
         elapsed_seconds = time.time() - st.session_state.question_start_time
         is_correct = answer == st.session_state.correct_definition
         points = 10 if is_correct and elapsed_seconds <= FAST_ANSWER_SECONDS else 5 if is_correct else 0
-
         st.session_state.score += points
         st.session_state.answered = True
         st.session_state.last_feedback = {
