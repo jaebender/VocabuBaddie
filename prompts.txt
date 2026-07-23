@@ -1,4 +1,4 @@
-=== Step 1 - Specify ===
+=== Step 1: Base System - Specify ===
 
 Prompt:
 I am starting a loop-engineering homework project. Help me write a clear, conservative specification for the base system of a small Streamlit word game.
@@ -16,7 +16,7 @@ Keep the answer practical, concrete, and easy for me to turn into implementation
 Output:
 docs/base-system-spec.md
 
-=== Step 2 - Plan ===
+=== Step 2: Base System - Plan ===
 Prompt: 
 Help me create the **Base System / Plan** for my Streamlit word game, based on the specification in `docs/base-system-spec.md` and the fact that I already have a vocab list in `vocab_lists/english_vocab_list_tester.py`.
 
@@ -57,7 +57,7 @@ Rewrite the implementation plan incorporating your recommendations. Keep the arc
 Output:
 docs/base-system-plan.md
 
-=== Step 3 - Build ===
+=== Step 3: Base System - Build ===
 
 Prompt:
 Help me build the **base system** for my Streamlit word game, using `docs/base-system-spec.md` as the source of truth and reusing the vocabulary data in `vocab_lists/english_vocab_list_tester.py`.
@@ -94,8 +94,12 @@ Before changing any code, explain what you think is causing the path or filename
 
 Only change the code related to loading the vocabulary data. Leave the rest of the application unchanged.
 
+Output:
+app.py
+
 === Step 4: Extension - Specify ===
 
+Prompt:
 Help me write a clear specification for the **Extension** of my Streamlit word game. The base system is already complete and includes a playable multiple-choice vocabulary game with score tracking during a game.
 
 The purpose of this extension is to add persistent high scores using a backend database.
@@ -120,8 +124,12 @@ Assume:
 
 Keep the specification conservative and appropriate for a first loop-engineering project. Do not write code or implementation details yet.
 
+Output:
+docs/extension-spec.md
+
 === Step 5: Extension - Plan ===
 
+Prompt:
 Help me create the **Extension / Plan** for my Streamlit word game, based on `docs/extension-spec.md` and the base system that is already complete.
 
 The extension adds persistent high scores with SQLite and a simple leaderboard.
@@ -169,7 +177,7 @@ Please identify:
 
 Do not rewrite the entire plan yet. Only provide the review and recommendations.
 
-Prompt - Loops:
+Prompt - Loop:
 Rewrite the implementation plan incorporating the recommendations from your review.
 
 Please produce a revised implementation plan that:
@@ -182,8 +190,12 @@ Please produce a revised implementation plan that:
 
 This revised plan will become the implementation plan for the extension, so make it concise, practical, and ready to guide development. Do not include code.
 
+Output:
+docs/extension-plan.md
+
 === Step 6: Extension - Build ===
 
+Prompt:
 Help me build the **extension** of my Streamlit word game, using `docs/extension-plan.md` as the source of truth and reusing the base system that already works.
 
 The extension should add persistent high scores with SQLite and a simple top-10 leaderboard.
@@ -208,3 +220,27 @@ Please write the changes to a new temp file and I'll paste and review the diff.
 
 Prompt:
 Actually, please just take the original app.py and apply the Extension - Build code changes in a new file, called app2.py/
+
+Prompt:
+Help me extend my Streamlit word game with **difficulty modes**: Easy, Medium, and Hard.
+
+I have a JSON vocabulary file with about 14,000 words ranked by frequency. I want the game to divide the currently loaded dataset into three equal buckets based on frequency rank:
+
+* Easy = first 1/3
+* Medium = second 1/3
+* Hard = final 1/3
+
+Please make this dynamic so it recalibrates automatically if I later swap in a different vocabulary list that is larger or smaller. The implementation should not rely on hard-coded word counts. It should compute the thirds from whatever dataset is loaded at runtime.
+
+Please update the existing app as conservatively as possible. I want:
+
+1. A simple difficulty selector in the UI.
+2. A clean way to filter the word pool by difficulty.
+3. No changes to the leaderboard/database behavior unless needed for compatibility.
+4. The ability to keep the current game flow and scoring system.
+5. A small, maintainable implementation that is easy to explain in my assignment.
+
+Before writing code, explain the simplest approach you would use to partition the dataset into thirds and how you would handle edge cases like very small datasets or ties in frequency.
+
+Output:
+app.py

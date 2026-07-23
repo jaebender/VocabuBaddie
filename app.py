@@ -17,7 +17,7 @@ FAST_ANSWER_SECONDS = 10
 DATABASE_PATH = Path(__file__).resolve().parent / "scores.db"
 
 
-def load_vocabulary() -> list[dict[str, str]]:
+def load_vocabulary() -> list[dict[str, object]]:
     """Load usable word and first-definition pairs from the local JSON list."""
     vocab_directory = Path(__file__).resolve().parent / "vocab_lists"
     json_files = sorted(vocab_directory.glob("*.json"))
@@ -34,11 +34,44 @@ def load_vocabulary() -> list[dict[str, str]]:
     entries = []
     for entry in raw_entries:
         word = entry.get("word") if isinstance(entry, dict) else None
+        frequency = entry.get("frequency") if isinstance(entry, dict) else None
         definitions = entry.get("defs") if isinstance(entry, dict) else None
         first_definition = definitions[0] if isinstance(definitions, list) and definitions else None
-        if isinstance(word, str) and word.strip() and isinstance(first_definition, str) and first_definition.strip():
-            entries.append({"word": word.strip(), "definition": first_definition.strip()})
+        if (
+            isinstance(word, str)
+            and word.strip()
+            and isinstance(frequency, int)
+            and isinstance(first_definition, str)
+            and first_definition.strip()
+        ):
+            entries.append(
+                {
+                    "word": word.strip(),
+                    "frequency": frequency,
+                    "definition": first_definition.strip(),
+                }
+            )
     return entries
+
+
+def vocabulary_by_difficulty(vocabulary: list[dict[str, object]]) -> dict[str, list[dict[str, object]]]:
+    """Split the runtime vocabulary list into three frequency-ranked buckets."""
+    ranked_vocabulary = sorted(
+        vocabulary,
+        key=lambda entry: (int(entry["frequency"]), str(entry["word"]).lower()),
+    )
+    first_cut = len(ranked_vocabulary) // 3
+    second_cut = (2 * len(ranked_vocabulary)) // 3
+    return {
+        "Easy": ranked_vocabulary[:first_cut],
+        "Medium": ranked_vocabulary[first_cut:second_cut],
+        "Hard": ranked_vocabulary[second_cut:],
+    }
+
+
+def can_play(pool: list[dict[str, object]]) -> bool:
+    """Check whether a difficulty pool can make a five-question game."""
+    return len(pool) >= TOTAL_QUESTIONS and len({str(entry["definition"]) for entry in pool}) >= 4
 
 
 def initialize_database() -> None:
@@ -93,13 +126,14 @@ def initialize_state() -> None:
         "answered": False,
         "last_feedback": None,
         "score_saved": False,
+        "difficulty": "Easy",
     }
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
 
-def new_question(vocabulary: list[dict[str, str]]) -> None:
+def new_question(vocabulary: list[dict[str, object]]) -> None:
     """Choose an unused word and make four distinct definition options."""
     available = [entry for entry in vocabulary if entry["word"] not in st.session_state.used_words]
     correct_entry = random.choice(available)
@@ -123,7 +157,7 @@ def new_question(vocabulary: list[dict[str, str]]) -> None:
     st.session_state.last_feedback = None
 
 
-def reset_game(vocabulary: list[dict[str, str]]) -> None:
+def reset_game(vocabulary: list[dict[str, object]]) -> None:
     st.session_state.game_started = True
     st.session_state.score = 0
     st.session_state.question_number = 0
@@ -143,17 +177,25 @@ except (OSError, ValueError, json.JSONDecodeError) as error:
     st.error(f"Vocabulary data could not be loaded: {error}")
     st.stop()
 
-unique_definitions = {entry["definition"] for entry in vocabulary}
-if len(vocabulary) < TOTAL_QUESTIONS or len(unique_definitions) < 4:
+if not can_play(vocabulary):
     st.error("The vocabulary list needs at least 5 words and 4 unique definitions.")
     st.stop()
 
+difficulty_pools = vocabulary_by_difficulty(vocabulary)
+
 if not st.session_state.game_started:
+    difficulty = st.selectbox("Difficulty", ("Easy", "Medium", "Hard"), key="difficulty")
+    selected_vocabulary = difficulty_pools[difficulty]
     st.write(f"This game has {TOTAL_QUESTIONS} questions.")
+    if not can_play(selected_vocabulary):
+        st.error(f"{difficulty} does not have enough usable words for a {TOTAL_QUESTIONS}-question game.")
     if st.button("Start Game", type="primary"):
-        reset_game(vocabulary)
-        st.rerun()
+        if can_play(selected_vocabulary):
+            reset_game(selected_vocabulary)
+            st.rerun()
     st.stop()
+
+selected_vocabulary = difficulty_pools[st.session_state.difficulty]
 
 if st.session_state.question_number >= TOTAL_QUESTIONS:
     st.success(f"Game complete! Your final score is {st.session_state.score} points.")
@@ -192,7 +234,7 @@ if st.session_state.question_number >= TOTAL_QUESTIONS:
             st.info("No scores saved yet.")
 
     if st.button("Play Again", type="primary"):
-        reset_game(vocabulary)
+        reset_game(selected_vocabulary)
         st.rerun()
     st.stop()
 
@@ -232,5 +274,5 @@ else:
         st.session_state.used_words.append(st.session_state.current_word)
         st.session_state.question_number += 1
         if st.session_state.question_number < TOTAL_QUESTIONS:
-            new_question(vocabulary)
+            new_question(selected_vocabulary)
         st.rerun()

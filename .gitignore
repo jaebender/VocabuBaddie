@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# Virtual environment
+.venv/
+
+# Environment and secrets
+.env
+
+# VS Code
+.vscode/
+
+# Vocabulary List Builder Folder
+vocab_lists_builder/
